@@ -1,0 +1,55 @@
+name: Morning Dashboard — Daily Run
+
+# ──────────────────────────────────────────────────────────────
+# Runs every weekday at 08:30 IST (03:00 UTC)
+# Also runnable on-demand via Actions → Run workflow
+# ──────────────────────────────────────────────────────────────
+on:
+  schedule:
+    - cron: '0 3 * * 1-5'   # Mon–Fri, 08:30 IST = 03:00 UTC
+  workflow_dispatch:          # Manual trigger from GitHub Actions UI
+
+jobs:
+  morning-dashboard:
+    name: Generate & Send Dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 30       # Full breadth scan takes ~10 min max
+
+    steps:
+      # 1 — Checkout repo
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2 — Python 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # 3 — Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install \
+            yfinance==0.2.38 \
+            pandas \
+            numpy \
+            matplotlib \
+            requests
+
+      # 4 — Run dashboard script
+      - name: Run Morning Dashboard
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python morning_dashboard.py
+
+      # 5 — Upload infographic as artifact (viewable in Actions run for 7 days)
+      - name: Upload infographic artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: morning-dashboard-${{ github.run_id }}
+          path: morning_dashboard_*.png
+          retention-days: 7
