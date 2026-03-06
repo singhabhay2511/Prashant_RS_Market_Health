@@ -363,7 +363,7 @@ def style(ax, bg=C_CARD, bdr=C_BDR, lw=0.8):
     ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
 
 # ─── Build figure ─────────────────────────────────────────────────────────────
-fig = plt.figure(figsize=(18, 26), facecolor=C_BG, dpi=150)
+fig = plt.figure(figsize=(18, 26), facecolor=C_BG, dpi=300)
 fig.patch.set_facecolor(C_BG)
 gs = gridspec.GridSpec(6, 1, figure=fig,
                        top=0.97, bottom=0.015, left=0.025, right=0.975,
@@ -611,7 +611,7 @@ ax_act.text(0.5, 0.04,
 
 # ── Save ──────────────────────────────────────────────────────────────────────
 fname = f'morning_dashboard_{datetime.today().strftime("%d%b%Y")}.png'
-plt.savefig(fname, dpi=150, bbox_inches='tight', facecolor=C_BG, edgecolor='none', pad_inches=0.1)
+plt.savefig(fname, dpi=300, bbox_inches='tight', facecolor=C_BG, edgecolor='none', pad_inches=0.1)
 plt.close(fig)
 print(f'\n✅  Saved: {fname}')
 print(f'  Image: {fname}  ({os.path.getsize(fname)//1024} KB)')
