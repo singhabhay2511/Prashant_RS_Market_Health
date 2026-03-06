@@ -363,7 +363,7 @@ def style(ax, bg=C_CARD, bdr=C_BDR, lw=0.8):
     ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
 
 # ─── Build figure ─────────────────────────────────────────────────────────────
-fig = plt.figure(figsize=(18, 26), facecolor=C_BG, dpi=300)
+fig = plt.figure(figsize=(18, 26), facecolor=C_BG, dpi=150)
 fig.patch.set_facecolor(C_BG)
 gs = gridspec.GridSpec(6, 1, figure=fig,
                        top=0.97, bottom=0.015, left=0.025, right=0.975,
@@ -611,7 +611,7 @@ ax_act.text(0.5, 0.04,
 
 # ── Save ──────────────────────────────────────────────────────────────────────
 fname = f'morning_dashboard_{datetime.today().strftime("%d%b%Y")}.png'
-plt.savefig(fname, dpi=300, bbox_inches='tight', facecolor=C_BG, edgecolor='none', pad_inches=0.1)
+plt.savefig(fname, dpi=150, bbox_inches='tight', facecolor=C_BG, edgecolor='none', pad_inches=0.1)
 plt.close(fig)
 print(f'\n✅  Saved: {fname}')
 print(f'  Image: {fname}  ({os.path.getsize(fname)//1024} KB)')
@@ -642,6 +642,14 @@ caption = (
     f"_Prashant Shah RS & Breadth — v7_"
 )
 
+# Telegram rejects photos wider than ~2560px or larger than 10MB
+from PIL import Image as _PIL
+_img = _PIL.open(fname)
+_w, _h = _img.size
+if _w > 2560:
+    _img = _img.resize((2560, int(_h * 2560 / _w)), _PIL.LANCZOS)
+    _img.save(fname)
+    print(f"  Resized to 2560px wide for Telegram")
 url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
 with open(fname, "rb") as img:
     resp = _rq.post(
