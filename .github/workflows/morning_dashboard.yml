@@ -4,12 +4,12 @@ on:
   schedule:
     # 8:30 AM IST = 03:00 UTC  (Mon–Fri only)
     - cron: '0 3 * * 1-5'
-  workflow_dispatch:   # manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   generate-and-send:
     runs-on: ubuntu-latest
-    timeout-minutes: 35   # breadth scan ~10 min + buffer
+    timeout-minutes: 40
 
     steps:
       - name: Checkout repo
@@ -22,13 +22,21 @@ jobs:
 
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
+          # curl_cffi lets yfinance impersonate a real Chrome browser at TLS level.
+          # This is the ONLY reliable way to get Yahoo Finance data from CI runner IPs.
+          pip install "curl_cffi>=0.6"
           pip install \
-            yfinance==0.2.38 \
+            "yfinance>=0.2.50" \
             pandas \
             numpy \
-            matplotlib \
+            "matplotlib>=3.7" \
             Pillow \
-            requests
+            requests \
+            requests-cache
+
+      - name: Verify curl_cffi works
+        run: python -c "from curl_cffi import requests; print('curl_cffi OK')"
 
       - name: Generate & send dashboard
         env:
