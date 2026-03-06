@@ -99,15 +99,34 @@ print(f'✅ Config ready  {START.date()} → {END.date()}')
 print(f'   Sectors: {len(SECTOR_NAMES)} | RS Switch assets: gold, bonds, usdinr')
 
 # ── STEP 1: Fetch closes ─────────────────────────────────────────────────
+# Small initial delay helps avoid Yahoo Finance rate-limit on fresh CI runners
 print('STEP 1: Fetching closes...\n')
+# curl_cffi impersonates a real Chrome browser at TLS level —
+# the only reliable way to bypass Yahoo Finance IP blocks on CI runners.
+# yfinance automatically uses it when installed (no code changes needed).
+try:
+    from curl_cffi import requests as _cffi_sess
+    _cffi_sess.Session(impersonate="chrome")
+    print("  ✅ curl_cffi available — Yahoo Finance TLS bypass active")
+except ImportError:
+    print("  ⚠️  curl_cffi not found — Yahoo may block CI runner IPs")
+time.sleep(8)  # let runner network settle
 
-def try_tickers(key, tickers_list):
+def try_tickers(key, tickers_list, retries=3, backoff=15):
+    """Try each ticker in order; retry up to `retries` times with backoff.
+    Handles GitHub Actions / CI IP rate-limiting by Yahoo Finance."""
     for t in tickers_list:
-        try:
-            df = yf.download(t, start=START, end=END, progress=False, auto_adjust=True)
-            if not df.empty and len(df) > 50:
-                return df['Close'].squeeze(), t
-        except: pass
+        for attempt in range(retries):
+            try:
+                df = yf.download(t, start=START, end=END, progress=False, auto_adjust=True)
+                if not df.empty and len(df) > 50:
+                    return df['Close'].squeeze(), t
+            except Exception as e:
+                pass
+            if attempt < retries - 1:
+                wait = backoff * (attempt + 1)
+                print(f'    ↻ {t}: attempt {attempt+1} failed, retrying in {wait}s...')
+                time.sleep(wait)
     return None, None
 
 closes_raw = {}
@@ -141,7 +160,10 @@ closes   = pd.DataFrame(closes_raw).ffill()
 last_date = closes.index[-1]
 days_old  = (datetime.today() - pd.Timestamp(last_date)).days
 if 'nifty50' not in closes.columns:
-    raise RuntimeError('Nifty 50 unavailable — cannot continue.')
+    print('CRITICAL: Nifty 50 unavailable — cannot continue.', file=sys.stderr)
+    sys.exit(1)
+if days_old > 5:
+    print(f'WARNING: Data is {days_old} days old (weekend/holiday is fine).')
 print(f'\n✅ STEP 1 DONE — Last close: {last_date.date()} ({days_old}d old), {closes.shape[1]} series')
 
 # ── STEP 2: RS Switch (3 assets) ────────────────────────────────────────
