@@ -27,7 +27,7 @@ TICKERS = {
     'niftynext50': '^NSMIDCP',
     # Cap segments — ETF proxies (Yahoo doesn't host these sub-indices reliably)
     'niftymid'   : 'MOM100.NS',       # Motilal Midcap 100 ETF ✅
-    'niftysml'   : 'SETFNIF50.NS',    # SBI Smallcap ETF proxy ✅
+    'niftysml'   : 'MOSMALL250.NS',   # Motilal Nifty Smallcap 250 ETF ✅
     'niftymicro' : 'NM250IETF.NS',    # Nippon Microcap 250 ETF (primary)
     # 8 confirmed working sector indices
     'bank'       : '^NSEBANK',
@@ -51,7 +51,7 @@ TICKERS = {
 
 TICKER_FALLBACKS = {
     'niftymid'  : ['MOM100.NS','MAFSETF.NS','MIDCAP100ETF.NS'],
-    'niftysml'  : ['SETFNIF50.NS','SETFNN50.NS','^CNXSC'],
+    'niftysml'  : ['MOSMALL250.NS','NIFTYSML250.NS','^CNXSC'],
     'niftymicro': ['NM250IETF.NS','NMICRO.NS','MICROCAP.NS',
                    'NIFMICAP.NS','NIFTYMICRO250.NS','HDFCMICRO.NS'],
     'finance'   : ['NETFFINLOG.NS','NIFTYFINANCE.NS','FINSETNIF.NS',
